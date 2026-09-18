@@ -1,6 +1,6 @@
 :root {
   --card-bg: linear-gradient(45deg, #00164e, #400064);
-  --shadow-glow: 0 0 20px #6366f14d;
+  --shadow-glow: 0 0 15px #6366f14d;
   --input-shadow: inset -3px 3px 4px rgba(0, 0, 0, 0.6),
   inset 3px -1px 5px rgba(0, 0, 0, 0.6);
 }
@@ -18,7 +18,7 @@ body {
 
 p {
   margin: 0;
-  color: #e7e7e7;;
+  color: #e7e7e7;
 }
 
 .weather-app {
@@ -44,10 +44,11 @@ header h1{
     font-size: 20px;
   }
   .search-form input {
-    padding: 10px;
+    padding: 10px 10px 10px 15px;
     border-radius: 12px;
     border: none;
     box-shadow: var(--input-shadow);
+    width: 250px;
   }
   .search-btn {
     padding: 10px;
@@ -66,12 +67,36 @@ header h1{
     background-color: #4b748d;
   }
 
+.location-card {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+
+  background: var(--card-bg);
+  color: #e7e7e7;
+  font-weight: bold;
+  border: none;
+  border-radius: 12px;
+  
+  min-width: 100%;
+  margin-bottom: 15px;
+  padding: 20px;
+
+  box-shadow: var(--shadow-glow);
+  cursor: pointer;
+
+  transition: all 0.15s;
+}
+.location-card:hover {
+  background: linear-gradient(45deg, #001342, #2b0044);
+}
+
 .weather-card {
   background: var(--card-bg);
   border: none;
   border-radius: 12px;
   padding: 20px;
-
+  gap: 20px;
   box-shadow: var(--shadow-glow);
 
   display: flex;
@@ -90,8 +115,12 @@ header h1{
 }
 
 .card-detail {
-  margin-left: 20px;
   font-weight: 500;
+}
+
+.weather-icon {
+  margin: 0;
+  font-size: 95px;
 }
 
 .temperature {
@@ -102,4 +131,11 @@ header h1{
   margin-top: 30px;
   font-size: 14px;
   font-weight: 400;
+}
+
+.loading {
+  margin: 20px 0 20px 0;
+  font-family: 'Courier New', Courier, monospace;
+  font-size: 20px;
+  font-weight: 500;
 }
