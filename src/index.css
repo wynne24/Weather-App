@@ -48,7 +48,12 @@ header h1{
     border-radius: 12px;
     border: none;
     box-shadow: var(--input-shadow);
-    width: 250px;
+    min-width: 0;
+    flex: 1;
+    width: auto;
+  }
+  .search-form .input-del-btn {
+    position: relative;
   }
   .search-btn {
     padding: 10px;
@@ -128,14 +133,7 @@ header h1{
 }
 
 .no-result-text {
-  margin-top: 30px;
+  margin: 30px 0;
   font-size: 14px;
   font-weight: 400;
-}
-
-.loading {
-  margin: 20px 0 20px 0;
-  font-family: 'Courier New', Courier, monospace;
-  font-size: 20px;
-  font-weight: 500;
 }

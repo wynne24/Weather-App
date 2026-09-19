@@ -1,5 +1,6 @@
 import { useState } from "react";
 import searchIcon from "./assets/search.svg"
+import LocationCard from "./components/LocationCard"
 
 const weatherDescriptions = {
     0: "Clear sky",
@@ -68,23 +69,24 @@ function App() {
   [city, setCity] = useState(""),
   [locations, setLocations] = useState([]),
   [weather, setWeather] = useState(null),
-  [searching, setSearching] = useState(false),
-  [loadingWeather, setLoadingWeather] = useState(false);
+  [loading, setLoading] = useState(""),
+  [error, setError] = useState("Search for a city to see the weather.");
 
   async function getLocation(cityName) {
     const url =
       `https://geocoding-api.open-meteo.com/v1/search?` +
       `name=${encodeURIComponent(cityName)}&count=10&language=en&format=json`;
     // name={cityName}, count=1 language = en format = json;
-    
-    setSearching(true);
+
     const response = await fetch(url); // Get json format 👆;
 
-    if (!response.ok) {throw new Error("Could not get location data.")
-    } else setSearching(false);
+    if (!response.ok) {
+      setError("Could not get location data.");
+      throw new Error("Could not get location data.");
+    };
 
     const data = await response.json(); // .json() read the json format
-    console.log(data.results[0]);
+
     return data.results ?? [];
   }
 
@@ -93,52 +95,69 @@ function App() {
       `https://api.open-meteo.com/v1/forecast?` +
       `latitude=${latitude}&longitude=${longitude}` +
       `&current=temperature_2m,relative_humidity_2m,apparent_temperature,` +
-      `weather_code,wind_speed_10m,visibility` +
+      `weather_code,wind_speed_10m,precipitation_probability` +
       `&timezone=auto`;
-    setLoadingWeather(true);
+    
     const response = await fetch(url);
 
-    if (!response.ok) {throw new Error("Counld not get weather data.") 
-    } else setLoadingWeather(false);
+    if (!response.ok) {
+      setError("Could not connect to the weather service.");
+      throw new Error("Could not get weather data.");
+    }
 
     const data = await response.json();
-    
+
     return data.current;
   }
 
   async function handleSubmit(e) {
     e.preventDefault();
 
-    const locationData = await getLocation(searchCity);
-    
-    if (locationData.length === 0) {
-      console.log("City not found");
+    if (searchCity.trim() === "") {
+      setError("Enter a city name.");
       return;
     }
-    setLocations(locationData);
-    setSearchCity("");
 
     try {
-      const location = locationData;
+      setLoading("Searching...");
+      setError("")
 
-      if (!location) {
-        console.log("City not found");
+      const locationData = await getLocation(searchCity);
+    
+      if (locationData.length === 0) {
+        setError("City not found.");
         return;
       }
+      setLocations(locationData);
+      setSearchCity("");
 
-      setCity(location.name);
-      
     } catch (error) {
       console.error(error);
+    } finally {
+      setLoading("");
     }
   }
 
   async function handleLocationSelect(location) {
-    const weatherData = await getWeather(location.latitude, location.longitude);
+    try {
+      setLoading("Loading weather...");
+      setError("");
 
-    setCity(location.name);
-    setWeather(weatherData);
-    setLocations([]);
+      const weatherData = await getWeather(
+        location.latitude, 
+        location.longitude
+      );
+
+      setCity(location.name);
+      setWeather(weatherData);
+      setLocations([]);
+
+    } catch (error) {
+      setError("Could not connect to the weather service.")
+      console.error(error);
+    } finally {
+      setLoading("");
+    }
   }
 
   return (
@@ -148,10 +167,10 @@ function App() {
           <h1>Weather App</h1>
         </header>
 
-        <div className="form-conatiner">
+        <div className="form-container">
           <form className="search-form" onSubmit={handleSubmit}>
             <label htmlFor="city">
-              <img className="i-search" src={searchIcon} />
+              <img className="i-search" src={searchIcon} alt="" />
             </label>
             <input
               id="city"
@@ -160,25 +179,15 @@ function App() {
               value={searchCity}
               onChange={(e) => setSearchCity(e.target.value)}
             />
+            <button className="input-del-btn">x</button>
             <button className="search-btn">Search</button>
           </form>
         </div>
 
-        {searching ? (<p className="loading">Searching...</p>) : null}
-        {loadingWeather ? (<p className="loading">Loading weather...</p>) : null}
+        {loading ? <p className="no-result-text">{loading}</p> : null}
 
         {locations.map((location) => (
-          <button
-            className="location-card"
-            key={location.id}
-            onClick={() => handleLocationSelect(location)}
-          >
-            <p>
-              {location.name}, {location.admin1} {location.country}
-            </p>
-            <p>{location.latitude}, {location.longitude}</p>
-
-          </button>
+          <LocationCard key={location.id} location={location} onSelect={handleLocationSelect} />
         ))}
 
         {weather ? (
@@ -186,20 +195,22 @@ function App() {
             <p className="weather-icon">{weatherIcons[weather.weather_code]}</p>
 
             <div>
-              <p className="city-name">{city ? city : "Today"}</p>
-              <p className="temperature">{Math.round(weather.apparent_temperature)}°C</p>
+              <p className="city-name">{city}</p>
+              <p className="temperature">{Math.round(weather.temperature_2m)}°C</p>
+              <p className="temperature">Feels like {Math.round(weather.apparent_temperature)}°C</p>
             </div>
 
             <div className="card-detail">
               <p>{weatherDescriptions[weather.weather_code] ?? "Unknown weather"}</p>
+              <p>Precipitation: {weather.precipitation_probability}%</p>
               <p>Humidity: {weather.relative_humidity_2m}%</p>
               <p>Wind: {weather.wind_speed_10m} km/h</p>
-              <p>Visibility: {weather.visibility / 1000} km</p>
             </div>
           </section>
-        ) : ''}
-        {locations.length !== 0 || weather || searching ? null : 
-          <p className="no-result-text">Search for a city to see the weather.</p>
+        ) : null}
+
+        {locations.length !== 0 || weather || loading ? null : 
+          <p className="no-result-text">{error}</p>
         }
       </main>
     </>
